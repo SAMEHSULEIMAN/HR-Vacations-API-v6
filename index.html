@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>شئون العاملين - جامعة الإسكندرية</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d4f6c">
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="شئون العاملين">
+
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="modal-root"></div>
+<div id="toast-container"></div>
+
+<!-- مؤشر التنقل البصري -->
+<div id="nav-hud" class="nav-hud" aria-hidden="true">
+    <div class="nav-hud-icon">🏠</div>
+    <div class="nav-hud-text">
+        <div class="nav-hud-title"></div>
+        <div class="nav-hud-subtitle"></div>
+    </div>
+</div>
+
+<!-- شريط عدّاد الجلسة -->
+<div id="session-countdown" class="session-countdown" aria-hidden="true">
+    <span class="session-countdown-icon">⏱️</span>
+    <span class="session-countdown-text"></span>
+</div>
+
+<!-- حاوية نافذة تحذير الجلسة -->
+<div id="session-warning-modal"></div>
+
+<!-- شريط حالة الاتصال بالخادم -->
+<div id="connection-status" class="connection-status" aria-hidden="true">
+    <span class="connection-icon">🌐</span>
+    <span class="connection-text"></span>
+</div>
+
+<!-- ========== الشريط العلوي ========== -->
+<header class="top-bar">
+    <button id="menu-toggle" class="icon-btn hamburger" aria-label="القائمة">
+        <span></span><span></span><span></span>
+    </button>
+
+    <div class="brand">
+        <img src="logo.png" alt="Logo" class="brand-logo">
+        <div class="brand-text">
+            <h1 data-i18n="app_name">شئون العاملين</h1>
+            <span data-i18n="app_university">جامعة الإسكندرية</span>
+        </div>
+    </div>
+
+    <div class="top-actions">
+        <button id="sync-btn" class="icon-btn" title="مزامنة" data-no-i18n>🔄</button>
+        <button id="keyboard-help-btn" class="icon-btn" title="اختصارات لوحة المفاتيح" data-no-i18n>⌨️</button>
+        <button id="lang-toggle" class="icon-btn" title="اللغة" data-no-i18n>🌐</button>
+        <button id="dark-mode-toggle" class="icon-btn" title="الوضع الداكن" data-no-i18n>🌙</button>
+    </div>
+</header>
+
+<!-- ========== القائمة الجانبية ========== -->
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <img src="logo.png" alt="Logo" class="sidebar-logo">
+        <h2 data-i18n="main_menu">القائمة الرئيسية</h2>
+        <button id="sidebar-close" class="sidebar-close" aria-label="إغلاق">×</button>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-group">
+            <div class="nav-group-title" data-i18n="group_user">👤 المستخدم</div>
+            <a class="nav-item active" data-section="user-panel" href="#">
+                <span class="nav-icon">🏠</span>
+                <span data-i18n="user_panel">لوحة المستخدم</span>
+            </a>
+            <a class="nav-item" data-section="new-vacation" href="#">
+                <span class="nav-icon">📝</span>
+                <span data-i18n="new_vacation">تسجيل إجازة</span>
+            </a>
+            <a class="nav-item" data-section="my-requests" href="#">
+                <span class="nav-icon">📋</span>
+                <span data-i18n="my_requests">طلباتي</span>
+            </a>
+            <a class="nav-item" data-section="permissions" href="#">
+                <span class="nav-icon">⏰</span>
+                <span data-i18n="permissions">الأذونات</span>
+            </a>
+            <a class="nav-item" data-section="vacation-log" href="#">
+                <span class="nav-icon">📅</span>
+                <span data-i18n="vacation_log">سجل الإجازات</span>
+            </a>
+            <a class="nav-item" data-section="reports" href="#">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="reports">التقارير</span>
+            </a>
+        </div>
+
+        <div class="nav-group admin-only">
+            <div class="nav-group-title" data-i18n="group_admin">🛡️ المشرف</div>
+            <a class="nav-item" data-section="admin-dashboard" href="#">
+                <span class="nav-icon">📊</span>
+                <span data-i18n="admin_dashboard">لوحة المشرف</span>
+                <span class="nav-badge" id="pending-badge">0</span>
+            </a>
+            <a class="nav-item" data-section="admin-employees" href="#">
+                <span class="nav-icon">👥</span>
+                <span data-i18n="admin_employees">الموظفون</span>
+            </a>
+            <a class="nav-item" data-section="admin-reports" href="#">
+                <span class="nav-icon">📈</span>
+                <span data-i18n="admin_reports">التقارير</span>
+            </a>
+            <a class="nav-item" data-section="admin-settings" href="#">
+                <span class="nav-icon">⚙️</span>
+                <span data-i18n="admin_settings">إعدادات متقدمة</span>
+            </a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title" data-i18n="group_general">⚙️ عام</div>
+            <a class="nav-item" data-section="settings" href="#">
+                <span class="nav-icon">⚙️</span>
+                <span data-i18n="settings_label">الإعدادات</span>
+            </a>
+            <a class="nav-item" data-section="backup" href="#">
+                <span class="nav-icon">💾</span>
+                <span data-i18n="backup_label">النسخ الاحتياطي</span>
+            </a>
+            <a class="nav-item nav-item-danger" id="sidebar-logout" href="#">
+                <span class="nav-icon">🚪</span>
+                <span data-i18n="logout">خروج</span>
+            </a>
+        </div>
+    </nav>
+</aside>
+
+<!-- ========== المحتوى الرئيسي ========== -->
+<main class="main-content">
+
+    <!-- ========== تسجيل الدخول ========== -->
+    <div id="login-section" class="app-section active" data-section="login">
+        <div class="card login-card">
+            <img src="logo.png" alt="Logo" class="login-logo">
+            <h2 data-i18n="login">تسجيل الدخول</h2>
+            <form id="login-form">
+                <label data-i18n="username">اسم المستخدم</label>
+                <input type="text" id="login-username" required>
+                <label data-i18n="password">كلمة المرور</label>
+                <input type="password" id="login-password" required>
+                <button type="submit" class="btn btn-primary" data-i18n="enter">دخول</button>
+            </form>
+            <hr>
+            <button id="show-register" class="btn btn-secondary" data-i18n="create_account">إنشاء حساب جديد</button>
+            <div id="register-form" style="display: none; margin-top: 15px;">
+                <h3 data-i18n="new_user">مستخدم جديد</h3>
+                <label data-i18n="name">الاسم</label>
+                <input type="text" id="reg-username" required>
+                <label data-i18n="birthdate">تاريخ الميلاد</label>
+                <input type="text" id="reg-birthdate" class="datepicker" required>
+                <label data-i18n="password">كلمة المرور</label>
+                <input type="password" id="reg-password" required>
+                <button id="do-register" class="btn btn-success" data-i18n="register">تسجيل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== محتوى التطبيق ========== -->
+    <div id="app-content" style="display:none;">
+        <div id="notification-area"></div>
+
+        <!-- ===== قسم: لوحة المستخدم ===== -->
+        <section class="app-section" data-section="user-panel">
+            <div class="card">
+                <h2 data-i18n="user_panel">لوحة المستخدم</h2>
+                <div id="user-info">
+                    <p><strong data-i18n="name">الاسم:</strong> <span id="display-username"></span></p>
+                    <p><strong data-i18n="age">العمر:</strong> <span id="display-age"></span> <span data-i18n="years">سنة</span></p>
+                    <p><strong data-i18n="allocated_regular">اعتيادية مخصصة:</strong> <span id="allocated-regular"></span> <span data-i18n="days_count">يوم</span></p>
+                    <p><strong data-i18n="remaining_regular">متبقي اعتيادية:</strong> <span id="remaining-regular"></span> <span data-i18n="days_count">يوم</span></p>
+                    <p><strong data-i18n="remaining_casual">متبقي عارضة:</strong> <span id="remaining-casual"></span> <span data-i18n="days_count">يوم</span></p>
+                    <p><strong data-i18n="remaining_sick">متبقي مرضية:</strong> <span id="remaining-sick"></span> <span data-i18n="days_count">يوم</span></p>
+                    <p><em data-i18n="unlimited_types">أنواع غير محدودة: وضع، رعاية طفل، غير مدفوعة</em></p>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button id="edit-user-btn" class="btn btn-warning btn-sm" disabled data-i18n="edit_my_data">تعديل بياناتي</button>
+                    <button id="delete-user-btn" class="btn btn-danger btn-sm" disabled data-i18n="delete_my_account">حذف حسابي</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: تسجيل إجازة جديدة ===== -->
+        <section class="app-section" data-section="new-vacation">
+            <div class="card">
+                <h2 data-i18n="new_vacation">تسجيل إجازة جديدة</h2>
+                <form id="vacation-form">
+                    <label data-i18n="vacation_type">نوع الإجازة</label>
+                    <select id="vacation-type" required>
+                        <option value="اعتيادية" data-i18n="regular">اعتيادية</option>
+                        <option value="عارضة" data-i18n="casual">عارضة</option>
+                        <option value="مرضية" data-i18n="sick">مرضية</option>
+                        <option value="وضع" data-i18n="maternity">وضع</option>
+                        <option value="رعاية طفل" data-i18n="childcare">رعاية طفل</option>
+                        <option value="غير مدفوعة" data-i18n="unpaid">غير مدفوعة</option>
+                    </select>
+                    <label data-i18n="add_range">إضافة نطاق (من - إلى)</label>
+                    <div class="date-range">
+                        <input type="text" id="range-start" class="datepicker" placeholder="من تاريخ">
+                        <span>←</span>
+                        <input type="text" id="range-end" class="datepicker" placeholder="إلى تاريخ">
+                        <button type="button" id="add-range" class="btn btn-secondary" data-i18n="add_range_btn">إضافة النطاق</button>
+                    </div>
+                    <label data-i18n="add_single_dates">أو إضافة تواريخ فردية</label>
+                    <div id="vacation-dates-container"></div>
+                    <button type="button" id="add-date-field" class="btn btn-secondary btn-sm" data-i18n="add_another_date">+ تاريخ آخر</button>
+                    <hr>
+                    <button type="submit" class="btn btn-primary" data-i18n="submit_vacation">📨 تقديم طلب الإجازة</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ===== قسم: طلباتي ===== -->
+        <section class="app-section" data-section="my-requests">
+            <div class="card">
+                <h2 data-i18n="my_requests">📋 طلباتي</h2>
+                <div id="my-requests-container"></div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: الأذونات ===== -->
+        <section class="app-section" data-section="permissions">
+            <div class="card">
+                <h2 data-i18n="permissions">⏰ الأذونات (ساعتان - مرة واحدة أسبوعياً)</h2>
+                <form id="permission-form">
+                    <label data-i18n="permission_type">نوع الأذن</label>
+                    <select id="permission-session" required>
+                        <option value="صباحي" data-i18n="morning">صباحي</option>
+                        <option value="مسائي" data-i18n="evening">مسائي</option>
+                    </select>
+                    <label data-i18n="permission_date">تاريخ الأذن</label>
+                    <input type="text" id="permission-date" class="datepicker" required>
+                    <button type="submit" class="btn btn-primary" data-i18n="submit_permission">تسجيل الأذن</button>
+                </form>
+                <h3 style="margin-top:15px;" data-i18n="my_permissions">أذوناتي</h3>
+                <div class="table-responsive">
+                    <table id="permission-table">
+                        <thead><tr>
+                            <th data-i18n="date">التاريخ</th>
+                            <th data-i18n="type">النوع</th>
+                            <th data-i18n="duration">المدة</th>
+                            <th data-i18n="delete">حذف</th>
+                        </tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: سجل الإجازات ===== -->
+        <section class="app-section" data-section="vacation-log">
+            <div class="card">
+                <div class="table-header">
+                    <h2 data-i18n="vacation_log">سجل الإجازات</h2>
+                    <div>
+                        <label data-i18n="fiscal_year">السنة المالية:</label>
+                        <select id="fiscal-year-filter"><option value="all">الكل</option></select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="vacation-table">
+                        <thead><tr>
+                            <th data-i18n="date">التاريخ</th>
+                            <th data-i18n="type">النوع</th>
+                            <th data-i18n="delete">حذف</th>
+                        </tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="text-align:center; margin-top:12px;">
+                    <button id="load-more-vacations" class="btn btn-secondary btn-sm" style="display:none;">تحميل المزيد</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: التقارير ===== -->
+        <section class="app-section" data-section="reports">
+            <div class="card" id="reports-card">
+                <div class="table-header">
+                    <h2 data-i18n="reports">📊 التقارير والإحصائيات</h2>
+                    <button id="print-report" class="btn btn-secondary btn-sm" data-i18n="print_report">🖨️ طباعة التقرير</button>
+                </div>
+                <div class="chart-title" id="chart-fiscal-title"></div>
+                <div class="flex-row">
+                    <div>
+                        <h3 data-i18n="type_distribution">توزيع أنواع الإجازات</h3>
+                        <canvas id="typeChart" width="300" height="300"></canvas>
+                    </div>
+                    <div>
+                        <h3 data-i18n="monthly_vacations">الإجازات الشهرية</h3>
+                        <canvas id="monthlyChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+                <div style="margin-top:25px;">
+                    <h3 data-i18n="yearly_accumulation">📈 تراكم الإجازات عبر السنوات المالية</h3>
+                    <canvas id="yearlyChart" width="800" height="350"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم (للمشرف): لوحة المشرف ===== -->
+        <section class="app-section admin-only" data-section="admin-dashboard">
+            <div class="card">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-tab="tab-pending">
+                        <span>⏳</span> <span data-i18n="pending_requests">طلبات بانتظار الموافقة</span>
+                        <span class="sub-tab-badge" id="pending-tab-badge">0</span>
+                    </button>
+                    <button class="sub-tab" data-tab="tab-quick-stats">
+                        <span>📈</span> <span data-i18n="quick_stats">إحصائيات سريعة</span>
+                    </button>
+                </div>
+
+                <div class="sub-tab-content active" data-tab="tab-pending">
+                    <div id="pending-requests-container"></div>
+                </div>
+
+                <div class="sub-tab-content" data-tab="tab-quick-stats">
+                    <div class="summary-stats">
+                        <div class="stat-box"><div class="stat-value" id="stat-total-users">0</div><div class="stat-label" data-i18n="total_users">إجمالي الموظفين</div></div>
+                        <div class="stat-box"><div class="stat-value" id="stat-total-vacations">0</div><div class="stat-label" data-i18n="total_vacations">إجمالي الإجازات</div></div>
+                        <div class="stat-box"><div class="stat-value" id="stat-pending-requests">0</div><div class="stat-label" data-i18n="pending_count">قيد المراجعة</div></div>
+                        <div class="stat-box"><div class="stat-value" id="stat-total-permissions">0</div><div class="stat-label" data-i18n="total_permissions">إجمالي الأذونات</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم (للمشرف): الموظفون ===== -->
+        <section class="app-section admin-only" data-section="admin-employees">
+            <div class="card">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-tab="tab-manage-users">
+                        <span>👥</span> <span data-i18n="manage_users">إدارة المستخدمين</span>
+                    </button>
+                    <button class="sub-tab" data-tab="tab-search-user">
+                        <span>🔍</span> <span data-i18n="search_user">بحث عن مستخدم</span>
+                    </button>
+                </div>
+
+                <div class="sub-tab-content active" data-tab="tab-manage-users">
+                    <div id="admin-user-form">
+                        <form id="user-form">
+                            <input type="hidden" id="edit-username">
+                            <label data-i18n="username">اسم المستخدم</label>
+                            <input type="text" id="username" required>
+                            <label data-i18n="birthdate">تاريخ الميلاد</label>
+                            <input type="text" id="birthdate" class="datepicker" required>
+                            <label data-i18n="password">كلمة المرور</label>
+                            <input type="password" id="user-password" required>
+                            <label data-i18n="whatsapp_number">رقم الواتساب (اختياري)</label>
+                            <input type="text" id="user-whatsapp" placeholder="201234567890">
+                            <button type="submit" id="user-submit-btn" class="btn btn-primary" data-i18n="add">إضافة</button>
+                            <button type="button" id="cancel-edit" class="btn btn-secondary" style="display:none;" data-i18n="cancel">إلغاء</button>
+                        </form>
+                        <button id="toggle-user-list" class="btn btn-success btn-sm" data-i18n="toggle_list">إظهار/إخفاء القائمة</button>
+                        <div class="user-list" id="user-list-container" style="display:none;">
+                            <h3 data-i18n="all_users">جميع المستخدمين</h3>
+                            <ul id="user-names"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-tab-content" data-tab="tab-search-user">
+                    <div class="search-controls">
+                        <input type="text" id="search-username" data-i18n="username" placeholder="اسم المستخدم">
+                        <div class="search-year">
+                            <label data-i18n="fiscal_year">السنة المالية:</label>
+                            <select id="search-fiscal-year"><option value="all">الكل</option></select>
+                        </div>
+                        <button id="search-button" class="btn btn-secondary" data-i18n="search">بحث</button>
+                    </div>
+                    <div id="search-results"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم (للمشرف): التقارير ===== -->
+        <section class="app-section admin-only" data-section="admin-reports">
+            <div class="card">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-tab="tab-summary">
+                        <span>📋</span> <span data-i18n="admin_summary">ملخص عام للموظفين</span>
+                    </button>
+                    <button class="sub-tab" data-tab="tab-audit">
+                        <span>📜</span> <span data-i18n="audit_log">سجل التدقيق</span>
+                    </button>
+                </div>
+
+                <div class="sub-tab-content active" data-tab="tab-summary">
+                    <div class="table-header">
+                        <h2 data-i18n="admin_summary">👥 ملخص عام للموظفين</h2>
+                        <button id="print-summary" class="btn btn-secondary btn-sm" data-i18n="print_summary">🖨️ طباعة الملخص</button>
+                    </div>
+
+                    <h3 style="margin-top:20px;" data-i18n="top_users">🏆 أعلى الموظفين في استخدام الإجازات</h3>
+                    <div class="table-responsive">
+                        <table id="top-users-table">
+                            <thead><tr>
+                                <th data-i18n="rank">#</th>
+                                <th data-i18n="employee">الموظف</th>
+                                <th data-i18n="total_days">إجمالي الأيام</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <h3 style="margin-top:20px;" data-i18n="detailed_balances">📋 الأرصدة التفصيلية</h3>
+                    <div class="search-controls">
+                        <input type="text" id="summary-filter" data-i18n="search_by_name" placeholder="بحث باسم الموظف">
+                        <div class="search-year">
+                            <label data-i18n="fiscal_year">السنة المالية:</label>
+                            <select id="summary-fiscal-year"><option value="all">الكل</option></select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="summary-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="employee">الموظف</th>
+                                    <th data-i18n="age">العمر</th>
+                                    <th data-i18n="th_alloc_regular">اعتيادي (مخصص)</th>
+                                    <th data-i18n="th_used_regular">اعتيادي (مستخدم)</th>
+                                    <th data-i18n="th_remain_regular">اعتيادي (متبقي)</th>
+                                    <th data-i18n="th_used_casual">عارضة (مستخدم)</th>
+                                    <th data-i18n="th_remain_casual">عارضة (متبقي)</th>
+                                    <th data-i18n="th_used_sick">مرضية (مستخدم)</th>
+                                    <th data-i18n="th_remain_sick">مرضية (متبقي)</th>
+                                    <th data-i18n="th_perms">أذونات</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="sub-tab-content" data-tab="tab-audit">
+                    <div class="table-header">
+                        <h2 data-i18n="audit_log">📜 سجل التدقيق</h2>
+                        <button id="clear-audit" class="btn btn-danger btn-sm" data-i18n="clear_log">مسح السجل</button>
+                    </div>
+                    <div class="search-controls">
+                        <input type="text" id="audit-filter" data-i18n="filter_audit" placeholder="تصفية (اسم المستخدم / الحدث)">
+                    </div>
+                    <div class="table-responsive" style="max-height:500px; overflow:auto;">
+                        <table id="audit-table">
+                            <thead><tr>
+                                <th data-i18n="datetime">التاريخ والوقت</th>
+                                <th data-i18n="actor">المنفّذ</th>
+                                <th data-i18n="event">الحدث</th>
+                                <th data-i18n="details">التفاصيل</th>
+                            </tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم (للمشرف): إعدادات متقدمة ===== -->
+        <section class="app-section admin-only" data-section="admin-settings">
+            <div class="card">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" data-tab="tab-holidays">
+                        <span>🎉</span> <span data-i18n="holidays">العطلات الرسمية</span>
+                    </button>
+                    <button class="sub-tab" data-tab="tab-whatsapp">
+                        <span>📱</span> <span data-i18n="whatsapp_notify">إشعار واتساب</span>
+                    </button>
+                    <button class="sub-tab" data-tab="tab-server">
+                        <span>🌐</span> <span data-i18n="server_settings">إعدادات الخادم</span>
+                    </button>
+                </div>
+
+                <div class="sub-tab-content active" data-tab="tab-holidays">
+                    <form id="holiday-form">
+                        <label data-i18n="holiday_name">اسم العطلة</label>
+                        <input type="text" id="holiday-name" required placeholder="عيد الفطر">
+                        <label data-i18n="holiday_date">التاريخ</label>
+                        <input type="text" id="holiday-date" class="datepicker-no-disable" required>
+                        <button type="submit" class="btn btn-primary" data-i18n="add">إضافة</button>
+                    </form>
+                    <ul id="holidays-list" class="holidays-list"></ul>
+                </div>
+
+                <div class="sub-tab-content" data-tab="tab-whatsapp">
+                    <p style="color:var(--dark); font-size:14px; margin-bottom:12px;" data-i18n="whatsapp_hint">
+                        عند اعتماد أو رفض طلب إجازة، سيُفتح واتساب برسالة جاهزة لإرسالها للموظف.
+                    </p>
+                    <div class="search-controls">
+                        <input type="text" id="whatsapp-number" placeholder="201234567890" style="flex:2;">
+                        <button id="save-whatsapp" class="btn btn-primary btn-sm" data-i18n="save_number">حفظ الرقم</button>
+                        <button id="test-whatsapp" class="btn btn-success btn-sm">🧪 اختبار</button>
+                    </div>
+                    <p style="font-size:12px; color:var(--dark); margin-top:8px;" data-i18n="whatsapp_note">
+                        ⚠️ أدخل الرقم بالصيغة الدولية بدون + أو 00.
+                    </p>
+                </div>
+
+                <div class="sub-tab-content" data-tab="tab-server">
+                    <p style="color:var(--dark); font-size:14px; margin-bottom:12px;">
+                        <span data-i18n="server_hint">إعدادات الاتصال بـ Google Sheets Backend</span>
+                    </p>
+                    <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                        <label data-i18n="api_url">رابط الـ API (Google Apps Script)</label>
+                        <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:13px; direction:ltr; text-align:left;">
+                        <label data-i18n="api_token">رمز المصادقة (Token)</label>
+                        <input type="password" id="api-token-input" placeholder="Secret token" style="font-size:13px; direction:ltr; text-align:left;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button id="save-api-settings" class="btn btn-primary btn-sm" data-i18n="save">حفظ</button>
+                            <button id="test-api-connection" class="btn btn-success btn-sm" data-i18n="test_connection">🧪 اختبار الاتصال</button>
+                        </div>
+                        <div id="api-status-info" class="backup-info"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: الإعدادات ===== -->
+        <section class="app-section" data-section="settings">
+            <div class="card">
+                <h2 data-i18n="settings_label">⚙️ الإعدادات</h2>
+                <div class="settings-grid">
+                    <div class="settings-row">
+                        <label class="toggle-label">
+                            <span data-i18n="saturday_off">السبت عطلة</span>
+                            <input type="checkbox" id="saturday-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <label class="toggle-label">
+                            <span data-i18n="enable_hijri">📅 التقويم الهجري</span>
+                            <input type="checkbox" id="hijri-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <label class="toggle-label">
+                            <span data-i18n="enable_auto_sync">🔄 المزامنة التلقائية كل 30 ثانية</span>
+                            <input type="checkbox" id="auto-sync-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <button id="export-settings" class="btn btn-secondary btn-sm" data-i18n="export_settings">⚙️ تصدير الإعدادات</button>
+                        <input type="file" id="import-settings" accept=".json" style="display:none;">
+                        <button id="import-settings-btn" class="btn btn-secondary btn-sm" data-i18n="import_settings">📥 استيراد الإعدادات</button>
+                    </div>
+
+                    <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <label data-i18n="customize_shortcuts">⌨️ تخصيص اختصارات لوحة المفاتيح</label>
+                            <button id="reset-shortcuts" class="btn btn-warning btn-sm" data-i18n="reset_shortcuts">↺ إعادة للافتراضي</button>
+                        </div>
+                        <div id="shortcuts-editor" class="shortcuts-editor"></div>
+                        <div class="shortcut-hint">
+                            <span>💡</span>
+                            <span data-i18n="shortcut_edit_hint">اضغط على أي اختصار لتحريره، ثم اضغط تركيبة المفاتيح الجديدة.</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                        <label data-i18n="session_settings">⏱️ إعدادات الجلسة</label>
+                        <label class="toggle-label" style="max-width: 100%;">
+                            <span data-i18n="enable_session_timeout">تفعيل انتهاء الجلسة التلقائي</span>
+                            <input type="checkbox" id="session-timeout-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <label style="flex:0 0 auto; margin:0;" data-i18n="session_duration">مدة الجلسة (دقائق):</label>
+                            <input type="number" id="session-duration" min="1" max="480" value="30" style="max-width:120px; margin:0;">
+                            <label style="flex:0 0 auto; margin:0;" data-i18n="warning_before">التنبيه قبل الانتهاء (دقائق):</label>
+                            <input type="number" id="session-warning" min="1" max="30" value="2" style="max-width:100px; margin:0;">
+                        </div>
+                    </div>
+
+                    <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                        <label data-i18n="auto_backup_settings">🔄 النسخ الاحتياطي التلقائي</label>
+                        <label class="toggle-label" style="max-width: 100%;">
+                            <span data-i18n="enable_auto_backup">تفعيل النسخ الاحتياطي التلقائي</span>
+                            <input type="checkbox" id="auto-backup-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <label style="flex:0 0 auto; margin:0;" data-i18n="backup_frequency">التكرار:</label>
+                            <select id="backup-frequency" style="max-width:180px; margin:0;">
+                                <option value="daily" data-i18n="freq_daily">يومياً</option>
+                                <option value="weekly" data-i18n="freq_weekly">أسبوعياً</option>
+                                <option value="hourly" data-i18n="freq_hourly">كل ساعة</option>
+                            </select>
+                            <button id="run-backup-now" class="btn btn-success btn-sm" data-i18n="backup_now">نسخ الآن</button>
+                        </div>
+                        <div id="backup-status-info" class="backup-info"></div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button id="view-backups-btn" class="btn btn-secondary btn-sm" data-i18n="view_backups">📂 عرض النسخ المحفوظة</button>
+                            <button id="download-latest-backup" class="btn btn-secondary btn-sm" data-i18n="download_latest">⬇️ تحميل أحدث نسخة</button>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-hint">
+                        <span>⌨️</span>
+                        <span data-i18n="shortcut_hint_text">اضغط Ctrl + / لعرض كل اختصارات لوحة المفاتيح، أو اضغط أيقونة ⌨️ في الأعلى.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== قسم: النسخ الاحتياطي ===== -->
+        <section class="app-section" data-section="backup">
+            <div class="card">
+                <h2 data-i18n="backup_label">💾 النسخ الاحتياطي والاستيراد</h2>
+                <div class="action-buttons-card" style="justify-content:flex-start;">
+                    <div class="action-group">
+                        <button id="undo" class="btn btn-secondary" data-i18n="undo">↩ تراجع</button>
+                        <button id="redo" class="btn btn-secondary" data-i18n="redo">↪ إعادة</button>
+                    </div>
+                    <div class="action-group">
+                        <button id="save" class="btn btn-success" data-i18n="save">💾 حفظ</button>
+                        <button id="force-sync" class="btn btn-primary" data-i18n="force_sync">🔄 مزامنة الخادم</button>
+                        <button id="export-excel" class="btn btn-secondary" data-i18n="export_excel">📊 Excel</button>
+                        <button id="export-pdf" class="btn btn-secondary" data-i18n="export_pdf">📄 PDF</button>
+                        <button id="save-as" class="btn btn-secondary" data-i18n="save_as">📁 JSON</button>
+                        <input type="file" id="import" style="display:none;">
+                        <button onclick="document.getElementById('import').click()" class="btn btn-secondary" data-i18n="import">📂 استيراد</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<!-- المكتبات -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.11.5/i18next.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hijri-date@0.2.2/cdn/hijri-date-latest.js"></script>
+
+<!-- طبقة الاتصال بـ Google Sheets (يجب أن تكون قبل script.js) -->
+<script src="api.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
