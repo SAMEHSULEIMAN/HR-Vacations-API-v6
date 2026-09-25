@@ -10,7 +10,7 @@ const API_CONFIG = {
 
     // ⚠️ رمز المصادقة السري - يجب أن يطابق SECRET_TOKEN في Apps Script
     TOKEN: localStorage.getItem('apiToken') ||
-           'AlexU-HR-2026-xK9mP3nQ7rL2vB5wY8tH4jD0fG6s',
+           'AKfycbzl5EY1vVtU0TPCM96R9upQkPIUKcE7Qwt0wHvsOQ',
 
     // مهلة الطلب (ms)
     TIMEOUT: 20000
