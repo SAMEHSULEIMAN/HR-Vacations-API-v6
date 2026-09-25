@@ -1,6 +1,6 @@
 /* ============================================================
    نظام إدارة الإجازات - شئون العاملين - جامعة الإسكندرية
-   الإصدار v6.1 - مربوط بـ Google Sheets + إصلاح الترجمة
+   الإصدار v7 - مربوط بـ Google Sheets Backend
    ============================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -68,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let customShortcuts = {};
     let navHudTimer = null;
 
-    // الجلسة
     let sessionTimeoutEnabled = false;
     let sessionDurationMinutes = 30;
     let sessionWarningMinutes = 2;
@@ -79,12 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let sessionWarningShown = false;
     let lastActivityThrottle = 0;
 
-    // النسخ التلقائي
     let autoBackupEnabled = false;
     let backupFrequency = 'daily';
     let autoBackupTimer = null;
 
-    // المزامنة
     let syncInterval = null;
     let isSyncing = false;
     let lastSyncTime = 0;
@@ -253,16 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 leaves_label: "الإجازات",
                 latest_downloaded: "تم تحميل أحدث نسخة",
                 new_request_notification: "📨 لديك طلب إجازة جديد!",
-                data_updated: "تم تحديث البيانات من الخادم",
-
-                // ============ مفاتيح التأكيد (الإصلاح الجديد) ============
-                confirm_delete_vacation: "هل تريد حذف إجازة ({type}) بتاريخ {date}؟",
-                confirm_delete_user: "حذف المستخدم {name} وجميع إجازاته؟",
-                confirm_delete_self: "حذف حساب {name} نهائياً؟",
-                confirm_delete_permission: "حذف هذا الأذن؟",
-                confirm_delete_holiday: "حذف هذه العطلة؟",
-                confirm_clear_audit: "مسح كامل سجل التدقيق؟ لا يمكن التراجع.",
-                confirm_cancel_request: "هل تريد إلغاء هذا الطلب؟"
+                data_updated: "تم تحديث البيانات من الخادم"
             }
         },
         en: {
@@ -426,16 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 leaves_label: "Leaves",
                 latest_downloaded: "Latest backup downloaded",
                 new_request_notification: "📨 You have a new leave request!",
-                data_updated: "Data updated from server",
-
-                // ============ مفاتيح التأكيد (الإصلاح الجديد) ============
-                confirm_delete_vacation: "Delete leave ({type}) on {date}?",
-                confirm_delete_user: "Delete user {name} and all their leaves?",
-                confirm_delete_self: "Permanently delete account {name}?",
-                confirm_delete_permission: "Delete this permission?",
-                confirm_delete_holiday: "Delete this holiday?",
-                confirm_clear_audit: "Clear entire audit log? Cannot be undone.",
-                confirm_cancel_request: "Cancel this request?"
+                data_updated: "Data updated from server"
             }
         }
     };
@@ -586,7 +565,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1200);
     }
 
-    // ====================== شريط حالة الاتصال ======================
     function showConnectionStatus(status, message = '') {
         const el = document.getElementById('connection-status');
         if (!el) return;
@@ -644,7 +622,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return weekStart.toISOString().slice(0, 10);
     }
 
-    // ====================== السنة المالية ======================
     function getFiscalYear(dateStr) {
         const d = new Date(dateStr);
         const year = d.getFullYear();
@@ -680,7 +657,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return vacations.filter(v => getFiscalYear(v.date) === Number(year));
     }
 
-    // ====================== الهجري ======================
     function toHijri(dateStr) {
         try {
             const d = new Date(dateStr);
@@ -696,7 +672,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(enabled ? t('hijri_enabled') : t('hijri_disabled'), 'info');
     }
 
-    // ====================== Undo/Redo ======================
     function pushState() {
         undoStack.push({
             users: JSON.parse(JSON.stringify(users)),
@@ -881,7 +856,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ====================== التبويبات الفرعية ======================
     function initSubTabs() {
         document.querySelectorAll('.app-section').forEach(section => {
             const tabs = section.querySelectorAll('.sub-tab');
@@ -912,7 +886,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!skipSave) saveNavState();
     }
 
-    // ====================== حفظ/استرجاع التنقل ======================
     const NAV_STATE_KEY = 'vacationApp_navState';
 
     function saveNavState() {
@@ -1345,67 +1318,65 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-async function loadAllDataFromServer(showLoader = false) {
-    if (showLoader) showConnectionStatus('syncing', t('sync_started'));
-    try {
-        const all = await api.getAllData();
+    async function loadAllDataFromServer(showLoader = false) {
+        if (showLoader) showConnectionStatus('syncing', t('sync_started'));
+        try {
+            const all = await api.getAllData();
 
-        // Users → Object
-        users = {};
-        (all.users || []).forEach(u => {
-            if (!u.username) return;
-            users[u.username] = rowToUser(u);
-        });
+            // Users → Object
+            users = {};
+            (all.users || []).forEach(u => {
+                if (!u.username) return;
+                users[u.username] = rowToUser(u);
+            });
 
-        // ✅ إنشاء admin تلقائياً عند أول تشغيل
-        if (Object.keys(users).length === 0) {
-            try {
-                const adminUser = {
-                    username: ADMIN_USERNAME,
-                    name: ADMIN_USERNAME,
-                    birthdate: '1990-01-01',
-                    password: ADMIN_PASSWORD,
-                    whatsapp: '',
-                    role: 'admin'
-                };
-                await api.addUser(adminUser);
-                users[ADMIN_USERNAME] = rowToUser(adminUser);
-                console.log('✅ تم إنشاء حساب المشرف الافتراضي تلقائياً');
-            } catch (err) {
-                console.warn('تعذّر إنشاء المشرف تلقائياً:', err);
+            // ✅ إنشاء admin تلقائياً عند أول تشغيل
+            if (Object.keys(users).length === 0) {
+                try {
+                    const adminUser = {
+                        username: ADMIN_USERNAME,
+                        name: ADMIN_USERNAME,
+                        birthdate: '1990-01-01',
+                        password: ADMIN_PASSWORD,
+                        whatsapp: '',
+                        role: 'admin'
+                    };
+                    await api.addUser(adminUser);
+                    users[ADMIN_USERNAME] = rowToUser(adminUser);
+                    console.log('✅ تم إنشاء حساب المشرف الافتراضي تلقائياً');
+                } catch (err) {
+                    console.warn('تعذّر إنشاء المشرف تلقائياً:', err);
+                }
             }
+
+            vacations   = (all.vacations   || []).map(v => ({ ...v, id: String(v.id) }));
+            requests    = (all.requests    || []).map(r => {
+                const dates = typeof r.dates === 'string'
+                    ? r.dates.split('|').filter(Boolean)
+                    : (Array.isArray(r.dates) ? r.dates : []);
+                return { ...r, id: String(r.id), dates, status: r.status || 'pending' };
+            });
+            permissions = (all.permissions || []).map(p => ({ ...p, id: String(p.id) }));
+            holidays    = (all.holidays    || []).map(h => ({ ...h, id: String(h.id) }));
+            auditLog    = (all.auditLog    || []).map(a => ({ ...a, id: String(a.id) }));
+
+            if (holidays.length === 0) holidays = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
+
+            connectionOnline = true;
+            lastSyncTime = Date.now();
+            if (showLoader) showConnectionStatus('online', t('sync_done'));
+            return true;
+        } catch (err) {
+            console.error('Load failed:', err);
+            connectionOnline = false;
+            if (showLoader) showConnectionStatus('offline', t('sync_failed') + ': ' + err.message);
+            return false;
         }
-
-        // Arrays
-        vacations   = (all.vacations   || []).map(v => ({ ...v, id: String(v.id) }));
-        requests    = (all.requests    || []).map(r => {
-            const dates = typeof r.dates === 'string'
-                ? r.dates.split('|').filter(Boolean)
-                : (Array.isArray(r.dates) ? r.dates : []);
-            return { ...r, id: String(r.id), dates, status: r.status || 'pending' };
-        });
-        permissions = (all.permissions || []).map(p => ({ ...p, id: String(p.id) }));
-        holidays    = (all.holidays    || []).map(h => ({ ...h, id: String(h.id) }));
-        auditLog    = (all.auditLog    || []).map(a => ({ ...a, id: String(a.id) }));
-
-        if (holidays.length === 0) holidays = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
-
-        connectionOnline = true;
-        lastSyncTime = Date.now();
-        if (showLoader) showConnectionStatus('online', t('sync_done'));
-        return true;
-    } catch (err) {
-        console.error('Load failed:', err);
-        connectionOnline = false;
-        if (showLoader) showConnectionStatus('offline', t('sync_failed') + ': ' + err.message);
-        return false;
     }
-}
 
     async function manualSync() {
         if (isSyncing) return;
         isSyncing = true;
-
         try {
             await loadAllDataFromServer(true);
             await refreshUI();
@@ -1671,7 +1642,7 @@ async function loadAllDataFromServer(showLoader = false) {
     }
 
     // ============================================================
-    //                النسخ الاحتياطي التلقائي (محلي)
+    //                النسخ الاحتياطي التلقائي
     // ============================================================
 
     function initAutoBackup() {
@@ -1763,7 +1734,7 @@ async function loadAllDataFromServer(showLoader = false) {
                 type,
                 timestamp: new Date().toISOString(),
                 createdBy: currentUser || 'system',
-                version: 'v6.1',
+                version: 'v7',
                 data: {
                     users: JSON.parse(JSON.stringify(users)),
                     vacations: JSON.parse(JSON.stringify(vacations)),
@@ -2759,7 +2730,7 @@ async function loadAllDataFromServer(showLoader = false) {
 
     function setupEventListeners() {
 
-        // ============ تسجيل الدخول ============
+        // تسجيل الدخول
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('login-username').value.trim();
@@ -2815,7 +2786,7 @@ async function loadAllDataFromServer(showLoader = false) {
             }
         });
 
-        // ============ الإعدادات العامة ============
+        // الإعدادات العامة
         document.getElementById('saturday-toggle').addEventListener('change', (e) => {
             applySaturdayOff(e.target.checked);
             logAction('change_setting', `السبت عطلة: ${e.target.checked}`);
@@ -2857,7 +2828,7 @@ async function loadAllDataFromServer(showLoader = false) {
             showToast(t('shortcuts_reset'), 'success');
         });
 
-        // ============ إدارة المستخدمين ============
+        // إدارة المستخدمين
         const userForm = document.getElementById('user-form');
         userForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2945,7 +2916,7 @@ async function loadAllDataFromServer(showLoader = false) {
             } catch (err) { showToast(t('sync_failed'), 'error'); }
         });
 
-        // ============ الإجازات ============
+        // الإجازات
         document.getElementById('add-date-field').addEventListener('click', () => addDateField());
         addDateField();
 
@@ -3043,7 +3014,7 @@ async function loadAllDataFromServer(showLoader = false) {
             }
         });
 
-        // ============ الفلاتر ============
+        // الفلاتر
         document.getElementById('fiscal-year-filter').addEventListener('change', (e) => {
             selectedFiscalYear = e.target.value;
             vacationDisplayLimit = VACATION_PAGE_SIZE;
@@ -3059,7 +3030,7 @@ async function loadAllDataFromServer(showLoader = false) {
             updateVacationTable();
         });
 
-        // ============ الأذونات ============
+        // الأذونات
         document.getElementById('permission-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const session = document.getElementById('permission-session').value;
@@ -3069,7 +3040,7 @@ async function loadAllDataFromServer(showLoader = false) {
             document.getElementById('permission-form').reset();
         });
 
-        // ============ العطلات ============
+        // العطلات
         document.getElementById('holiday-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('holiday-name').value.trim();
@@ -3079,7 +3050,7 @@ async function loadAllDataFromServer(showLoader = false) {
             document.getElementById('holiday-form').reset();
         });
 
-        // ============ سجل التدقيق ============
+        // سجل التدقيق
         document.getElementById('audit-filter').addEventListener('input', (e) => {
             auditFilter = e.target.value;
             renderAuditLog();
@@ -3096,7 +3067,7 @@ async function loadAllDataFromServer(showLoader = false) {
             } catch (err) { showToast(t('sync_failed'), 'error'); }
         });
 
-        // ============ ملخص المشرف ============
+        // ملخص المشرف
         document.getElementById('summary-filter').addEventListener('input', (e) => {
             summaryFilter = e.target.value;
             renderAdminSummary();
@@ -3106,7 +3077,7 @@ async function loadAllDataFromServer(showLoader = false) {
             renderAdminSummary();
         });
 
-        // ============ واتساب ============
+        // واتساب
         const wn = document.getElementById('whatsapp-number');
         if (wn) {
             wn.value = whatsappNumber;
@@ -3124,11 +3095,11 @@ async function loadAllDataFromServer(showLoader = false) {
             });
         }
 
-        // ============ زر المزامنة في الشريط العلوي ============
+        // زر المزامنة
         const syncBtn = document.getElementById('sync-btn');
         if (syncBtn) syncBtn.addEventListener('click', manualSync);
 
-        // ============ تراجع/إعادة (محلي) ============
+        // تراجع/إعادة
         document.getElementById('undo').addEventListener('click', async () => {
             if (undoStack.length === 0) return;
             redoStack.push({
@@ -3162,7 +3133,7 @@ async function loadAllDataFromServer(showLoader = false) {
             refreshUI();
         });
 
-        // ============ حفظ / تصدير / استيراد ============
+        // حفظ / تصدير / استيراد
         document.getElementById('save').addEventListener('click', () => manualSync());
         const forceSyncBtn = document.getElementById('force-sync');
         if (forceSyncBtn) forceSyncBtn.addEventListener('click', manualSync);
@@ -3243,7 +3214,7 @@ async function loadAllDataFromServer(showLoader = false) {
             e.target.value = '';
         });
 
-        // ============ الطباعة ============
+        // الطباعة
         document.getElementById('print-report').addEventListener('click', () => {
             const cards = document.querySelectorAll('#app-content .card');
             const hidden = [];
