@@ -1,18 +1,16 @@
 /* ============================================================
    api.js - طبقة الاتصال بـ Google Apps Script Backend
-   الإصدار المُصحّح v7
+   الإصدار المُصحّح v8 - يتجنب CORS
    ============================================================ */
 
 const API_CONFIG = {
-    // رابط /exec الصحيح (ليس /dev)
     BASE_URL: localStorage.getItem('apiBaseUrl') ||
               'https://script.google.com/macros/s/AKfycbw9E2qVOs6gBlyjcixpaQyRWV2yCVohNxpQ25_9w-LanJ5jyQL_3Qg39NN1MOdJdKE/exec',
 
-    // ⚠️ رمز المصادقة — يجب أن يطابق SECRET_TOKEN في Apps Script
     TOKEN: localStorage.getItem('apiToken') ||
            'VacationApp_Alexandria_2026_SecretToken_v1',
 
-    TIMEOUT: 20000
+    TIMEOUT: 30000
 };
 
 const api = {
@@ -36,23 +34,21 @@ const api = {
         localStorage.removeItem('apiToken');
     },
 
-    async get(action, params = {}) {
-        const qs = new URLSearchParams({
-            action,
-            token: API_CONFIG.TOKEN,
-            ...params
-        }).toString();
-        return this._fetch(`${API_CONFIG.BASE_URL}?${qs}`, { method: 'GET' });
-    },
-
-    async post(action, data = {}) {
+    // ============ طلب موحّد ============
+    // جميع الطلبات تُرسل كـ POST مع text/plain لتجنب preflight
+    async request(action, data = {}) {
         return this._fetch(API_CONFIG.BASE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action, token: API_CONFIG.TOKEN, ...data })
+            body: JSON.stringify({
+                action,
+                token: API_CONFIG.TOKEN,
+                ...data
+            })
         });
     },
 
+    // ============ Fetch with timeout ============
     async _fetch(url, options) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
@@ -65,14 +61,16 @@ const api = {
             });
             clearTimeout(timer);
 
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
 
             const text = await res.text();
             let json;
             try {
                 json = JSON.parse(text);
             } catch {
-                console.error('Raw response:', text.substring(0, 300));
+                console.error('Raw response:', text.substring(0, 500));
                 throw new Error('استجابة غير صالحة من الخادم (ليست JSON)');
             }
 
@@ -85,36 +83,37 @@ const api = {
         }
     },
 
-    async ping() { return this.get('ping'); },
-    async getAllData() { return this.get('getAll'); },
+    // ============ Endpoints ============
+    async ping() { return this.request('ping'); },
+    async getAllData() { return this.request('getAll'); },
 
-    async getUsers() { return this.get('getUsers'); },
-    async getVacations() { return this.get('getVacations'); },
-    async getRequests() { return this.get('getRequests'); },
-    async getPermissions() { return this.get('getPermissions'); },
-    async getHolidays() { return this.get('getHolidays'); },
-    async getAuditLog() { return this.get('getAuditLog'); },
+    async getUsers() { return this.request('getUsers'); },
+    async getVacations() { return this.request('getVacations'); },
+    async getRequests() { return this.request('getRequests'); },
+    async getPermissions() { return this.request('getPermissions'); },
+    async getHolidays() { return this.request('getHolidays'); },
+    async getAuditLog() { return this.request('getAuditLog'); },
 
-    async addUser(user) { return this.post('addUser', { user }); },
-    async updateUser(oldUsername, user) { return this.post('updateUser', { username: oldUsername, user }); },
-    async deleteUser(username) { return this.post('deleteUser', { username }); },
+    async addUser(user) { return this.request('addUser', { user }); },
+    async updateUser(oldUsername, user) { return this.request('updateUser', { username: oldUsername, user }); },
+    async deleteUser(username) { return this.request('deleteUser', { username }); },
 
-    async addVacation(v) { return this.post('addVacation', { vacation: v }); },
-    async deleteVacation(id) { return this.post('deleteVacation', { id }); },
+    async addVacation(v) { return this.request('addVacation', { vacation: v }); },
+    async deleteVacation(id) { return this.request('deleteVacation', { id }); },
 
-    async addRequest(r) { return this.post('addRequest', { request: r }); },
-    async updateRequest(id, r) { return this.post('updateRequest', { id, request: r }); },
-    async deleteRequest(id) { return this.post('deleteRequest', { id }); },
+    async addRequest(r) { return this.request('addRequest', { request: r }); },
+    async updateRequest(id, r) { return this.request('updateRequest', { id, request: r }); },
+    async deleteRequest(id) { return this.request('deleteRequest', { id }); },
 
-    async addPermission(p) { return this.post('addPermission', { permission: p }); },
-    async deletePermission(id) { return this.post('deletePermission', { id }); },
+    async addPermission(p) { return this.request('addPermission', { permission: p }); },
+    async deletePermission(id) { return this.request('deletePermission', { id }); },
 
-    async addHoliday(h) { return this.post('addHoliday', { holiday: h }); },
-    async deleteHoliday(id) { return this.post('deleteHoliday', { id }); },
+    async addHoliday(h) { return this.request('addHoliday', { holiday: h }); },
+    async deleteHoliday(id) { return this.request('deleteHoliday', { id }); },
 
-    async addAudit(entry) { return this.post('addAudit', { entry }); },
-    async clearAudit() { return this.post('clearAudit'); },
-    async replaceAllData(data) { return this.post('replaceAll', { data }); }
+    async addAudit(entry) { return this.request('addAudit', { entry }); },
+    async clearAudit() { return this.request('clearAudit'); },
+    async replaceAllData(data) { return this.request('replaceAll', { data }); }
 };
 
 function apiRequestToRow(r) {
