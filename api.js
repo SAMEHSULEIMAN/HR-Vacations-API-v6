@@ -6,7 +6,7 @@
 const API_CONFIG = {
     // رابط الـ Web App (يُفضّل /exec بعد النشر الرسمي)
     BASE_URL: localStorage.getItem('apiBaseUrl') ||
-              'https://script.google.com/macros/s/AKfycbzl5EY1vVtU0TPCM96R9upQkPIUKcE7Qwt0wHvsOQ/exec',
+              'https://script.google.com/macros/s/AKfycbzl5EY1vVtU0TPCM96R9upQkPIUKcE7Qwt0wHvsOQ/dev',
 
     // ⚠️ رمز المصادقة السري - يجب أن يطابق SECRET_TOKEN في Apps Script
     TOKEN: localStorage.getItem('apiToken') ||
