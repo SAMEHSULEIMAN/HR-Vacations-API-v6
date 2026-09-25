@@ -39,7 +39,7 @@ self.addEventListener('fetch', (e) => {
 
     const url = new URL(e.request.url);
 
-    // لا نُخزّن أي طلبات من Google (API) أو أي غير GET
+    // لا نُخزّن أي طلبات من Google (API)
     if (url.hostname.includes('script.google.com') ||
         url.hostname.includes('googleusercontent.com') ||
         url.hostname.includes('script.googleusercontent.com') ||
