@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vacation-app-v6';
+const CACHE_NAME = 'vacation-app-v7';
 const ASSETS = [
     './',
     './index.html',
@@ -39,9 +39,11 @@ self.addEventListener('fetch', (e) => {
 
     const url = new URL(e.request.url);
 
-    // لا نُخزّن طلبات الـ API
+    // لا نُخزّن أي طلبات من Google (API) أو أي غير GET
     if (url.hostname.includes('script.google.com') ||
-        url.hostname.includes('googleusercontent.com')) {
+        url.hostname.includes('googleusercontent.com') ||
+        url.hostname.includes('script.googleusercontent.com') ||
+        url.hostname.includes('googleapis.com')) {
         return;
     }
 
