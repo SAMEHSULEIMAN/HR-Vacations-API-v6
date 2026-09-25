@@ -4,11 +4,11 @@
    ============================================================ */
 
 const API_CONFIG = {
-    // رابط /exec الجديد
+    // رابط /exec الصحيح (ليس /dev)
     BASE_URL: localStorage.getItem('apiBaseUrl') ||
               'https://script.google.com/macros/s/AKfycbw9E2qVOs6gBlyjcixpaQyRWV2yCVohNxpQ25_9w-LanJ5jyQL_3Qg39NN1MOdJdKE/exec',
 
-    // رمز المصادقة — يجب أن يطابق SECRET_TOKEN في Apps Script
+    // ⚠️ رمز المصادقة — يجب أن يطابق SECRET_TOKEN في Apps Script
     TOKEN: localStorage.getItem('apiToken') ||
            'VacationApp_Alexandria_2026_SecretToken_v1',
 
