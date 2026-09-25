@@ -1345,46 +1345,62 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    async function loadAllDataFromServer(showLoader = false) {
-        if (showLoader) showConnectionStatus('syncing', t('sync_started'));
-        try {
-            const all = await api.getAllData();
+async function loadAllDataFromServer(showLoader = false) {
+    if (showLoader) showConnectionStatus('syncing', t('sync_started'));
+    try {
+        const all = await api.getAllData();
 
-            users = {};
-            (all.users || []).forEach(u => {
-                if (!u.username) return;
-                users[u.username] = rowToUser(u);
-            });
+        // Users → Object
+        users = {};
+        (all.users || []).forEach(u => {
+            if (!u.username) return;
+            users[u.username] = rowToUser(u);
+        });
 
-            vacations   = (all.vacations   || []).map(v => ({ ...v, id: String(v.id) }));
-            requests    = (all.requests    || []).map(r => {
-                const dates = typeof r.dates === 'string'
-                    ? r.dates.split('|').filter(Boolean)
-                    : (Array.isArray(r.dates) ? r.dates : []);
-                return {
-                    ...r,
-                    id: String(r.id),
-                    dates,
-                    status: r.status || 'pending'
+        // ✅ إنشاء admin تلقائياً عند أول تشغيل
+        if (Object.keys(users).length === 0) {
+            try {
+                const adminUser = {
+                    username: ADMIN_USERNAME,
+                    name: ADMIN_USERNAME,
+                    birthdate: '1990-01-01',
+                    password: ADMIN_PASSWORD,
+                    whatsapp: '',
+                    role: 'admin'
                 };
-            });
-            permissions = (all.permissions || []).map(p => ({ ...p, id: String(p.id) }));
-            holidays    = (all.holidays    || []).map(h => ({ ...h, id: String(h.id) }));
-            auditLog    = (all.auditLog    || []).map(a => ({ ...a, id: String(a.id) }));
-
-            if (holidays.length === 0) holidays = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
-
-            connectionOnline = true;
-            lastSyncTime = Date.now();
-            if (showLoader) showConnectionStatus('online', t('sync_done'));
-            return true;
-        } catch (err) {
-            console.error('Load failed:', err);
-            connectionOnline = false;
-            if (showLoader) showConnectionStatus('offline', t('sync_failed'));
-            return false;
+                await api.addUser(adminUser);
+                users[ADMIN_USERNAME] = rowToUser(adminUser);
+                console.log('✅ تم إنشاء حساب المشرف الافتراضي تلقائياً');
+            } catch (err) {
+                console.warn('تعذّر إنشاء المشرف تلقائياً:', err);
+            }
         }
+
+        // Arrays
+        vacations   = (all.vacations   || []).map(v => ({ ...v, id: String(v.id) }));
+        requests    = (all.requests    || []).map(r => {
+            const dates = typeof r.dates === 'string'
+                ? r.dates.split('|').filter(Boolean)
+                : (Array.isArray(r.dates) ? r.dates : []);
+            return { ...r, id: String(r.id), dates, status: r.status || 'pending' };
+        });
+        permissions = (all.permissions || []).map(p => ({ ...p, id: String(p.id) }));
+        holidays    = (all.holidays    || []).map(h => ({ ...h, id: String(h.id) }));
+        auditLog    = (all.auditLog    || []).map(a => ({ ...a, id: String(a.id) }));
+
+        if (holidays.length === 0) holidays = JSON.parse(JSON.stringify(DEFAULT_HOLIDAYS));
+
+        connectionOnline = true;
+        lastSyncTime = Date.now();
+        if (showLoader) showConnectionStatus('online', t('sync_done'));
+        return true;
+    } catch (err) {
+        console.error('Load failed:', err);
+        connectionOnline = false;
+        if (showLoader) showConnectionStatus('offline', t('sync_failed') + ': ' + err.message);
+        return false;
     }
+}
 
     async function manualSync() {
         if (isSyncing) return;
