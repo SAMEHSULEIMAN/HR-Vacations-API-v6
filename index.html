@@ -22,7 +22,6 @@
 <div id="modal-root"></div>
 <div id="toast-container"></div>
 
-<!-- مؤشر التنقل البصري -->
 <div id="nav-hud" class="nav-hud" aria-hidden="true">
     <div class="nav-hud-icon">🏠</div>
     <div class="nav-hud-text">
@@ -31,22 +30,18 @@
     </div>
 </div>
 
-<!-- شريط عدّاد الجلسة -->
 <div id="session-countdown" class="session-countdown" aria-hidden="true">
     <span class="session-countdown-icon">⏱️</span>
     <span class="session-countdown-text"></span>
 </div>
 
-<!-- حاوية نافذة تحذير الجلسة -->
 <div id="session-warning-modal"></div>
 
-<!-- شريط حالة الاتصال بالخادم -->
 <div id="connection-status" class="connection-status" aria-hidden="true">
     <span class="connection-icon">🌐</span>
     <span class="connection-text"></span>
 </div>
 
-<!-- ========== الشريط العلوي ========== -->
 <header class="top-bar">
     <button id="menu-toggle" class="icon-btn hamburger" aria-label="القائمة">
         <span></span><span></span><span></span>
@@ -68,7 +63,6 @@
     </div>
 </header>
 
-<!-- ========== القائمة الجانبية ========== -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
 <aside class="sidebar" id="sidebar">
@@ -79,7 +73,6 @@
     </div>
 
     <nav class="sidebar-nav">
-
         <div class="nav-group">
             <div class="nav-group-title" data-i18n="group_user">👤 المستخدم</div>
             <a class="nav-item active" data-section="user-panel" href="#">
@@ -147,10 +140,8 @@
     </nav>
 </aside>
 
-<!-- ========== المحتوى الرئيسي ========== -->
 <main class="main-content">
 
-    <!-- ========== تسجيل الدخول ========== -->
     <div id="login-section" class="app-section active" data-section="login">
         <div class="card login-card">
             <img src="logo.png" alt="Logo" class="login-logo">
@@ -177,11 +168,9 @@
         </div>
     </div>
 
-    <!-- ========== محتوى التطبيق ========== -->
     <div id="app-content" style="display:none;">
         <div id="notification-area"></div>
 
-        <!-- ===== قسم: لوحة المستخدم ===== -->
         <section class="app-section" data-section="user-panel">
             <div class="card">
                 <h2 data-i18n="user_panel">لوحة المستخدم</h2>
@@ -201,7 +190,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: تسجيل إجازة جديدة ===== -->
         <section class="app-section" data-section="new-vacation">
             <div class="card">
                 <h2 data-i18n="new_vacation">تسجيل إجازة جديدة</h2>
@@ -231,7 +219,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: طلباتي ===== -->
         <section class="app-section" data-section="my-requests">
             <div class="card">
                 <h2 data-i18n="my_requests">📋 طلباتي</h2>
@@ -239,7 +226,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: الأذونات ===== -->
         <section class="app-section" data-section="permissions">
             <div class="card">
                 <h2 data-i18n="permissions">⏰ الأذونات (ساعتان - مرة واحدة أسبوعياً)</h2>
@@ -268,7 +254,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: سجل الإجازات ===== -->
         <section class="app-section" data-section="vacation-log">
             <div class="card">
                 <div class="table-header">
@@ -294,7 +279,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: التقارير ===== -->
         <section class="app-section" data-section="reports">
             <div class="card" id="reports-card">
                 <div class="table-header">
@@ -319,7 +303,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم (للمشرف): لوحة المشرف ===== -->
         <section class="app-section admin-only" data-section="admin-dashboard">
             <div class="card">
                 <div class="sub-tabs">
@@ -347,7 +330,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم (للمشرف): الموظفون ===== -->
         <section class="app-section admin-only" data-section="admin-employees">
             <div class="card">
                 <div class="sub-tabs">
@@ -396,7 +378,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم (للمشرف): التقارير ===== -->
         <section class="app-section admin-only" data-section="admin-reports">
             <div class="card">
                 <div class="sub-tabs">
@@ -478,7 +459,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم (للمشرف): إعدادات متقدمة ===== -->
         <section class="app-section admin-only" data-section="admin-settings">
             <div class="card">
                 <div class="sub-tabs">
@@ -537,7 +517,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: الإعدادات ===== -->
         <section class="app-section" data-section="settings">
             <div class="card">
                 <h2 data-i18n="settings_label">⚙️ الإعدادات</h2>
@@ -627,7 +606,6 @@
             </div>
         </section>
 
-        <!-- ===== قسم: النسخ الاحتياطي ===== -->
         <section class="app-section" data-section="backup">
             <div class="card">
                 <h2 data-i18n="backup_label">💾 النسخ الاحتياطي والاستيراد</h2>
@@ -652,7 +630,6 @@
     </div>
 </main>
 
-<!-- المكتبات -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -662,7 +639,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.11.5/i18next.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hijri-date@0.2.2/cdn/hijri-date-latest.js"></script>
 
-<!-- طبقة الاتصال بـ Google Sheets (يجب أن تكون قبل script.js) -->
 <script src="api.js"></script>
 <script src="script.js"></script>
 </body>
